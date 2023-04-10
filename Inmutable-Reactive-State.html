@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Immutable Reactive UI State based Manipulation of DOM</title>
+  </head>
+  <body>
+    <h1>Immutable Reactive UI State based Manipulation of DOM</h1>
+    <form id="todo-form">
+      <input type="text" id="todo-item" placeholder="Task to do" />
+      <input type="submit" value="Add" />
+    </form>
+    <h2>List of the tasks to do</h2>
+    <ul id="todo-list"></ul>
+    <script>
+      const d = document,
+        $item = d.getElementById('todo-item'),
+        $list = d.getElementById('todo-list'),
+        state = { todoList: [] }
+
+      let $li = document.createElement('li')
+
+      //Template UI
+      const template = () => {
+        if (state.todoList.length < 1) {
+          const $p = document.createElement('p')
+          const $em = document.createElement('em')
+          const $text = document.createTextNode('Blank to do list')
+          $em.appendChild($text)
+          $p.appendChild($em)
+          return $p
+        } else {
+          return state.todoList.map(itemName => {
+            const $shadowList = d.createElement('li')
+            $shadowList.textContent = itemName
+            return $shadowList
+          })
+        }
+      }
+
+      //UI rendering
+      const render = () => {
+        if (!d.getElementById('todo-list') || !$list) return
+
+        console.log(state)
+        console.log($list)
+        if (Array.isArray(template())) {
+          while ($list.firstChild) $list.lastChild.remove()
+
+          template().forEach($item => $list.appendChild($item))
+        } else {
+          $list.appendChild(template())
+        }
+      }
+
+      //Update the State (Reactivity State) and UI
+      const setState = object => {
+        for (const key in object) {
+          if (state.hasOwnProperty(key)) {
+            state[key] = object[key]
+          }
+        }
+      }
+
+      //todo Get an immutable copy of State
+      const getState = () => JSON.parse(JSON.stringify(state))
+
+      d.addEventListener('DOMContentLoaded', render)
+
+      //Setting Default Values to the state
+      setState({
+        todoList: ['task 1', 'task 2', 'task 3'],
+        names: ['this key and value will nos display on the State'],
+      })
+
+      //todo Mutable State, because it allows to modify the state directly creating a copy of the object and adding other element.
+      const mutableItems = state.todoList
+      mutableItems.push('mutable task 4')
+      console.log('Mutable state', state)
+
+      //todo Immutable State. 'immutable task 4' won't appear in the DOM
+      const immutableItems = getState()
+      immutableItems.todoList.push('immutable task 4')
+
+      d.addEventListener('submit', e => {
+        e.preventDefault()
+        if (!e.target.matches('#todo-form') || $item.value === '') return false
+
+        /*
+        //Update the State and the UI (MUTABLE)
+        state.todoList.push($item.value)
+        */
+
+        //Updating the State reactively
+        const data = getState()
+        data.todoList.push($item.value)
+        setState({ todoList: data.todoList })
+
+        render()
+        //Updating input
+        $item.value = ''
+        $item.focus()
+      })
+    </script>
+  </body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reactivity: Components with State</title>
+  </head>
+  <body>
+    <h1>Reactivity: Components with State</h1>
+    <form id="todo-form">
+      <input type="text" id="todo-item" placeholder="Task to do" />
+      <input type="submit" value="Add" />
+    </form>
+    <h2>List of the tasks to do</h2>
+    <ul id="todo-list"></ul>
+    <script>
+      const d = document,
+        $item = d.getElementById('todo-item'),
+        $list = d.getElementById('todo-list')
+
+      //todo GLOBAL STATE
+      const state = { todoList: [], names: [] }
+
+      console.log('Base global state', state)
+
+      let $li = document.createElement('li')
+
+      //Template UI
+      const template = () => {
+        if (template.data.todoList.length < 1) {
+          const $p = document.createElement('p')
+          const $em = document.createElement('em')
+          const $text = document.createTextNode('Blank to do list')
+          $em.appendChild($text)
+          $p.appendChild($em)
+          return $p
+        } else {
+          return template.data.todoList.map(itemName => {
+            const $shadowList = d.createElement('li')
+            $shadowList.textContent = itemName
+            return $shadowList
+          })
+        }
+      }
+
+      //Adding the State to the Template that generate the UI Component
+      //todo(Local State) (Everything in JavasScript is an object xD)
+      template.data = {
+        todoList: [],
+      }
+
+      //UI rendering
+      const render = () => {
+        if (!d.getElementById('todo-list') || !$list) return
+
+        console.log('Global State: ', state)
+        console.log('Local State: ', template.data)
+        console.log($list)
+        if (Array.isArray(template())) {
+          while ($list.firstChild) $list.lastChild.remove()
+
+          template().forEach($item => $list.appendChild($item))
+        } else {
+          $list.appendChild(template())
+        }
+      }
+
+      //Update the State (Reactivity State) and UI
+      const setState = object => {
+        for (const key in object) {
+          if (template.data.hasOwnProperty(key)) {
+            template.data[key] = object[key]
+          }
+        }
+      }
+
+      //Get an immutable copy of State
+      const getState = () => JSON.parse(JSON.stringify(template.data))
+
+      d.addEventListener('DOMContentLoaded', render)
+
+      //Setting Default Values to the state
+      setState({
+        todoList: ['task 1', 'task 2', 'task 3'],
+      })
+
+      //Immutable State. 'immutable task 4' won't appear in the DOM
+      const immutableItems = getState()
+      immutableItems.todoList.push('immutable task 4')
+
+      d.addEventListener('submit', e => {
+        e.preventDefault()
+        if (!e.target.matches('#todo-form') || $item.value === '') return false
+
+        //Updating the s reactively
+        const data = getState()
+        data.todoList.push($item.value)
+        setState({ todoList: data.todoList })
+
+        render()
+        //Updating input
+        $item.value = ''
+        $item.focus()
+      })
+    </script>
+  </body>
+</html>

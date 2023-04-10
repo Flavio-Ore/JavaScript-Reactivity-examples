@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Immutable Reactive UI State based Manipulation of DOM</title>
+  </head>
+  <body>
+    <h1>Immutable Reactive UI State based Manipulation of DOM</h1>
+    <form id="todo-form">
+      <input type="text" id="todo-item" placeholder="Task to do" />
+      <input type="submit" value="Add" />
+    </form>
+    <h2>List of the tasks to do</h2>
+    <ul id="todo-list"></ul>
+    <script src="Component.js"></script>
+    <script>
+      const d = document
+      const $item = d.querySelector('#todo-item')
+      const app = new StringsBasedComponent({
+        el: '#todo-list',
+        data: {
+          todoList: [],
+        },
+        template: function (props) {
+          if (props.todoList.length < 1) {
+            return `<p><em>Blank to do list</em></p>`
+          }
+          let todos = props.todoList.map(todo => `<li>${todo}</li>`).join('')
+          return todos
+        },
+      })
+
+      d.addEventListener('DOMContentLoaded', app.render)
+
+      //Setting Default Values to the state
+      app.setState({
+        todoList: ['task 1', 'task 2', 'task 3'],
+        names: ['this key and value will nos display on the State'],
+      })
+
+      d.addEventListener('submit', e => {
+        e.preventDefault()
+        if (!e.target.matches('#todo-form') || $item.value === '') return false
+
+        const newImageState = app.getState()
+
+        newImageState.todoList.push($item.value)
+
+        app.setState({ todoList: newImageState.todoList })
+
+        console.log('Image: ', newImageState)
+
+        //Updating input
+        $item.value = ''
+        $item.focus()
+      })
+    </script>
+  </body>
+</html>
